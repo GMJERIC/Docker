@@ -1,0 +1,59 @@
+version: '3.6'
+
+services:
+  db:
+    image: mariadb:10.3
+    command: mysqld --bind-address=0.0.0.0 --slow-query-log --log-output=TABLE --log-queries-not-using-indexes=ON
+    restart: always
+    environment:
+     - MYSQL_ROOT_PASSWORD=test
+     - MYSQL_DATABASE=test
+     - MYSQL_USER=test
+     - MYSQL_PASSWORD=test
+    volumes:
+     - ./data:/var/lib/mysql
+    ports:
+     - 3306:3306
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    links:
+      - db
+
+  app1:
+    build: ./app/
+    expose:
+      - 80
+    environment:
+      - APPNAME=app1
+    ports:
+      - 3001:80
+  app2:
+    build: ./app/
+    expose:
+      - 80
+    environment:
+      - APPNAME=app2
+    ports:
+      - 3002:80
+  app3:
+    build: ./app/
+    expose:
+      - 80
+    environment:
+      - APPNAME=app3
+    ports:
+      - 3003:80    
+  loadbalancer:
+    build: ./nginx
+    expose:
+      - 80
+    ports:
+      - 80:80
+    depends_on:
+      - app1
+      - app2
+      - app3
